@@ -38,8 +38,21 @@ jobs:
     - name: Install Capacitor CLI & Core
       run: pnpm add @capacitor/core @capacitor/cli @capacitor/android
 
-    - name: Initialize Capacitor Project
-      run: pnpm cap init "Mobil Uygulamam" "com.tasarimci.myapp" --web-dir=out
+    - name: Auto Detect Web Dir and Initialize
+      run: |
+        if [ -d "out" ]; then
+          WEB_DIR="out"
+        elif [ -d ".next" ]; then
+          WEB_DIR=".next"
+        elif [ -d "dist" ]; then
+          WEB_DIR="dist"
+        elif [ -d "build" ]; then
+          WEB_DIR="build"
+        else
+          WEB_DIR="."
+        fi
+        echo "Detected web directory: $WEB_DIR"
+        pnpm cap init "Mobil Uygulamam" "com.tasarimci.myapp" --web-dir=$WEB_DIR
 
     - name: Add Android Platform
       run: pnpm cap add android
