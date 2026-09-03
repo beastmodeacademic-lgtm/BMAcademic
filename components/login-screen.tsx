@@ -3,6 +3,7 @@
 import { GraduationCap, ChevronRight } from 'lucide-react'
 import { useStore } from '@/lib/store'
 import { BrandLogo } from '@/components/brand-logo'
+import { signInWithGoogle } from '@/lib/firebase' // Sihirli Google girişimizi bağladık
 
 function GoogleGlyph() {
   return (
@@ -17,6 +18,17 @@ function GoogleGlyph() {
 
 export function LoginScreen() {
   const { setScreen } = useStore()
+
+  // Google Girişini Yöneten Gerçek Akıl
+  const handleGoogleLogin = async () => {
+    const user = await signInWithGoogle();
+    if (user) {
+      // Eğer Google girişi başarılıysa sınıf seçme ekranına geç
+      setScreen('gradeSelect');
+    } else {
+      alert("Google ile giriş yapılamadı, lütfen tekrar deneyin.");
+    }
+  };
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden px-6 pb-10 pt-16">
@@ -36,9 +48,9 @@ export function LoginScreen() {
       </div>
 
       <div className="relative flex flex-col gap-4">
-        {/* Single Google button — KVKK safe */}
+        {/* Gerçek Google Butonu */}
         <button
-          onClick={() => setScreen('gradeSelect')}
+          onClick={handleGoogleLogin}
           className="flex w-full items-center justify-center gap-3 rounded-2xl bg-foreground px-5 py-4 text-base font-bold text-background transition active:scale-[0.98]"
         >
           <GoogleGlyph />
