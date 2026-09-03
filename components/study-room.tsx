@@ -28,9 +28,6 @@ export function StudyRoom({
   const scrollRef = useRef<HTMLDivElement>(null)
   const stuckTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Google AI Studio'dan aldığın anahtarı buraya tırnakların arasına yapıştır
-  const GEMINI_API_KEY = "AIzaSyBqHgSoxMbnzbDONGOTawpgn4poX-JquUg"
-
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages, phase])
@@ -63,34 +60,21 @@ export function StudyRoom({
     }, 2200)
   }
 
+  // Güvenlik duvarını aşan, arka plan sunucuna bağlanan temiz köprü fonksiyonu
   const askGemini = async (chatHistory: Msg[], currentInput: string) => {
     try {
-      const formattedHistory = chatHistory.map(m => ({
-        role: m.from === 'user' ? 'user' : 'model',
-        parts: [{ text: m.text }]
-      }));
-
-      const response = await fetch(`https://googleapis.com{GEMINI_API_KEY}`, {
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [
-            ...formattedHistory,
-            { role: 'user', parts: [{ text: `Sen arkadaş canlısı, samimi bir lise/ortaokul öğretmenisin. Öğrenciye direkt cevabı söyleme, sokratik yöntemle ipuçları vererek çözdür. Türkçe konuş. Öğrencinin sorusu: ${currentInput}` }] }
-          ]
-        })
-      });
-
-      const data = await response.json();
-      if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
-        return data.candidates[0].content.parts[0].text;
-      }
-      return "Kanka tam anlayamadım, soruyu tekrar yazar mısın? 😔";
+        body: JSON.stringify({ chatHistory, currentInput })
+      })
+      const data = await response.json()
+      return data.text
     } catch (error) {
-      console.error("Gemini hatası:", error);
-      return "Kanka bağlantıda ufak bir kopukluk oldu ya, tekrar yazar mısın? 😔";
+      console.error(error)
+      return "Kanka bağlantıda ufak bir kopukluk oldu ya, tekrar yazar mısın? 😔"
     }
-  };
+  }
 
   const send = async () => {
     const val = input.trim()
@@ -106,7 +90,7 @@ export function StudyRoom({
     setInput('')
     setLoading(true)
 
-    const aiResponse = await askGemini(messages, val);
+    const aiResponse = await askGemini(messages, val)
     
     setMessages((m) => [
       ...m,
@@ -114,7 +98,7 @@ export function StudyRoom({
         from: 'ai',
         text: aiResponse
       }
-    ]);
+    ])
     
     setLoading(false)
     addXp(5)
@@ -163,7 +147,7 @@ export function StudyRoom({
           {phase === 'scan' && (
             <button onClick={startScan} className="flex items-center gap-2 rounded-2xl bg-primary px-6 py-4 text-sm font-bold text-primary-foreground transition active:scale-95">
               <Camera className="h-5 w-5" />
-              Sorunun Fotoğanını Çek / Yükle
+              Sorunun Fotoğrafını Çek / Yükle
             </button>
           )}
         </div>
@@ -185,7 +169,7 @@ export function StudyRoom({
             {loading && (
               <div className="flex justify-start">
                 <div className="rounded-2xl rounded-bl-md bg-elevated px-4 py-2.5 text-sm text-muted-foreground animate-pulse">
-                  Kanka düşünüyor ve çözüyorum... 🧠
+                  Kanka düşünüyor... 🧠
                 </div>
               </div>
             )}
