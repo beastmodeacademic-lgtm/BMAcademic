@@ -28,8 +28,8 @@ export function StudyRoom({
   const scrollRef = useRef<HTMLDivElement>(null)
   const stuckTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Senin az önce Google AI Studio'dan aldığın o gizli anahtarı buraya gömüyoruz
-  const GEMINI_API_KEY = "AIzaSyBqHgSoxWbnzbD0NGoTawpgn4poX-JquUg"
+  // Google AI Studio'dan aldığın anahtarı buraya tırnakların arasına yapıştır
+  const GEMINI_API_KEY = "AIzaSyBqHgSoxMbnzbDONGOTawpgn4poX-JquUg"
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
@@ -57,13 +57,12 @@ export function StudyRoom({
       setMessages([
         {
           from: 'ai',
-          text: `Merhaba kanka! 👋 ${assignment.subject} odasına hoş geldin. Ben senin yapay zeka öğretmeninim. Bana bu konuyla ilgili çözemediğin herhangi bir soruyu yazabilirsin, adım adım birlikte çözeceğiz! 💪`,
+          text: `Merhaba kanka! 👋 ${assignment.subject} odasına hoş geldin. Ben senin gerçek yapay zeka öğretmeninim. Bana bu konuyla ilgili çözemediğin herhangi bir soruyu yazabilirsin, adım adım birlikte çözeceğiz! 💪`,
         },
       ])
     }, 2200)
   }
 
-  // Doğrudan Google Gemini Sunucularına Bağlanan Canavar Fonksiyon
   const askGemini = async (chatHistory: Msg[], currentInput: string) => {
     try {
       const formattedHistory = chatHistory.map(m => ({
@@ -83,7 +82,10 @@ export function StudyRoom({
       });
 
       const data = await response.json();
-      return data.candidates[0].content.parts[0].text;
+      if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+        return data.candidates[0].content.parts[0].text;
+      }
+      return "Kanka tam anlayamadım, soruyu tekrar yazar mısın? 😔";
     } catch (error) {
       console.error("Gemini hatası:", error);
       return "Kanka bağlantıda ufak bir kopukluk oldu ya, tekrar yazar mısın? 😔";
@@ -104,7 +106,6 @@ export function StudyRoom({
     setInput('')
     setLoading(true)
 
-    // Sabit kalıpları yıkıp gerçek cevabı ürettiriyoruz
     const aiResponse = await askGemini(messages, val);
     
     setMessages((m) => [
@@ -162,7 +163,7 @@ export function StudyRoom({
           {phase === 'scan' && (
             <button onClick={startScan} className="flex items-center gap-2 rounded-2xl bg-primary px-6 py-4 text-sm font-bold text-primary-foreground transition active:scale-95">
               <Camera className="h-5 w-5" />
-              Sorunun Fotoğrafını Çek / Yükle
+              Sorunun Fotoğanını Çek / Yükle
             </button>
           )}
         </div>
@@ -204,9 +205,9 @@ export function StudyRoom({
           <div className="flex items-center gap-2 border-t border-border px-4 pb-6 pt-3">
             <input
               value={input}
+              disabled={solved || loading}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) send(); }}
-              disabled={solved || loading}
               placeholder={loading ? 'Düşünüyorum...' : 'Cevabını veya sorunu yaz...'}
               className="flex-1 rounded-full border border-input bg-elevated px-4 py-3 text-sm outline-none transition focus:border-primary disabled:opacity-60"
             />
